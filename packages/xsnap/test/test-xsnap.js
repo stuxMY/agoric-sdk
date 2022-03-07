@@ -134,12 +134,15 @@ test('print - start compartment only', async t => {
     print('print:', 123);
     try {
       (new Compartment()).evaluate('print("456")');
-    } catch (_err) {
-      send('no print in Compartment');
+    } catch (err) {
+      send('err:' + err);
     }
   `);
   await vat.close();
-  t.deepEqual(['no print in Compartment'], opts.messages);
+  t.deepEqual(
+    ['err:ReferenceError: ?: get print: undefined variable'],
+    opts.messages,
+  );
 });
 
 test('gc - start compartment only', async t => {
@@ -151,12 +154,15 @@ test('gc - start compartment only', async t => {
     gc();
     try {
       (new Compartment()).evaluate('gc()');
-    } catch (_err) {
-      send('no gc in Compartment');
+    } catch (err) {
+      send('err:' + err);
     }
   `);
   await vat.close();
-  t.deepEqual(['no gc in Compartment'], opts.messages);
+  t.deepEqual(
+    ['err:ReferenceError: ?: get gc: undefined variable'],
+    opts.messages,
+  );
 });
 
 test('run script until idle', async t => {
