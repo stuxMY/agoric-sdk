@@ -1,5 +1,14 @@
 // @ts-check
+import { ORACLE_PRICE_BRAND_NAME } from './utils.js';
+
 const SHARED_BOOTSTRAP_MANIFEST = harden({
+  makeOffChainBrands: {
+    brand: {
+      produce: {
+        [ORACLE_PRICE_BRAND_NAME]: true,
+      },
+    },
+  },
   makeVatsFromBundles: {
     vats: {
       vatAdmin: 'vatAdmin',
@@ -308,7 +317,7 @@ const SHARED_POST_BOOT_MANIFEST = harden({
       vaultFactoryGovernorCreator: 'VaultFactory',
       vaultFactoryVoteCreator: 'VaultFactory',
     },
-    brand: { consume: { RUN: 'zoe' } },
+    brand: { consume: { RUN: 'zoe', [ORACLE_PRICE_BRAND_NAME]: true } },
     installation: {
       consume: { contractGovernor: 'zoe' },
       produce: { VaultFactory: 'zoe', liquidate: 'zoe' },

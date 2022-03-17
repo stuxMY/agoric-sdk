@@ -12,8 +12,8 @@ const mapEntries = (obj, f) =>
   // @ts-ignore entries() loses key type
   fromEntries(entries(obj).map(([p, v]) => f(p, v)));
 
-// TODO: phase out ./issuers.js
 export const CENTRAL_ISSUER_NAME = 'RUN';
+export const ORACLE_PRICE_BRAND_NAME = 'USD';
 
 // We reserve these keys in name hubs.
 export const agoricNamesReserved = harden({
@@ -25,6 +25,7 @@ export const agoricNamesReserved = harden({
   brand: {
     BLD: 'Agoric staking token',
     RUN: 'Agoric RUN currency',
+    [ORACLE_PRICE_BRAND_NAME]: 'US Dollar',
     Attestation: 'Agoric lien attestation',
   },
   installation: {

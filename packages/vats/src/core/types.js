@@ -121,7 +121,10 @@
  */
 
 /**
+ * @typedef {import('./utils').ORACLE_PRICE_BRAND_NAME} OffChainBrands
  * @typedef {{
+ *   brand: |
+ *     'RUN' | 'BLD' | OffChainBrands,
  *   issuer: |
  *     'RUN' | 'BLD',
  *   installation: |
@@ -145,8 +148,8 @@
  *     consume: Record<WellKnownName['issuer'], Promise<Issuer>>,
  *   },
  *   brand: {
- *     produce: Record<WellKnownName['issuer'], Producer<Brand>>,
- *     consume: Record<WellKnownName['issuer'], Promise<Brand>>,
+ *     produce: Record<WellKnownName['brand'], Producer<Brand>>,
+ *     consume: Record<WellKnownName['brand'], Promise<Brand>>,
  *   },
  *   installation:{
  *     produce: Record<WellKnownName['installation'], Producer<Installation>>,
