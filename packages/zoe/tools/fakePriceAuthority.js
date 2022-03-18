@@ -14,12 +14,14 @@ import { natSafeMath } from '../src/contractSupport/index.js';
 import './types.js';
 import '../exported.js';
 
+/** @typedef {number | bigint} Bigish */
+
 /**
  * @typedef {Object} FakePriceAuthorityOptions
  * @property {Brand} actualBrandIn
  * @property {Brand} actualBrandOut
- * @property {Array<number>} [priceList]
- * @property {Array<[number, number]>} [tradeList]
+ * @property {Array<Bigish>} [priceList]
+ * @property {Array<[Bigish, Bigish]>} [tradeList]
  * @property {ERef<TimerService>} timer
  * @property {RelativeTime} [quoteInterval]
  * @property {ERef<Mint>} [quoteMint]
