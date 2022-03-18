@@ -1,8 +1,15 @@
 // @ts-check
 
 import { E, Far } from '@endo/far';
-import { makeRatio } from '@agoric/zoe/src/contractSupport/index.js';
-import { CENTRAL_ISSUER_NAME } from '@agoric/vats/src/core/utils.js';
+import {
+  makeRatio,
+  makeRatioFromAmounts,
+  makeUnitAmount,
+} from '@agoric/zoe/src/contractSupport/index.js';
+import {
+  CENTRAL_ISSUER_NAME,
+  ORACLE_PRICE_BRAND_NAME,
+} from '@agoric/vats/src/core/utils.js';
 import '@agoric/governance/exported.js';
 import '@agoric/vats/exported.js';
 import '@agoric/vats/src/core/types.js';
@@ -171,7 +178,10 @@ export const startVaultFactory = async (
     },
     produce, // {  vaultFactoryCreator }
     brand: {
-      consume: { [CENTRAL_ISSUER_NAME]: centralBrandP },
+      consume: {
+        [CENTRAL_ISSUER_NAME]: centralBrandP,
+        [ORACLE_PRICE_BRAND_NAME]: oraclePriceBrandP,
+      },
     },
     instance,
     installation,
@@ -195,7 +205,14 @@ export const startVaultFactory = async (
     E(E(zoe).getInvitationIssuer()).getAmountOf(poserInvitationP),
   ]);
 
-  const centralBrand = await centralBrandP;
+  const [centralBrand, oraclePriceBrand] = await Promise.all([
+    centralBrandP,
+    oraclePriceBrandP,
+  ]);
+
+  const debtPriceRatio = await Promise.all(
+    [centralBrand, oraclePriceBrand].map(makeUnitAmount),
+  ).then(async ([debt, price]) => makeRatioFromAmounts(debt, price));
 
   // declare governed params for the vaultFactory; addVaultType() sets actual rates
   const rates = {
@@ -215,6 +232,7 @@ export const startVaultFactory = async (
 
   const vaultFactoryTerms = makeGovernedTerms(
     priceAuthority,
+    debtPriceRatio,
     loanParams,
     installations.liquidate,
     chainTimerService,

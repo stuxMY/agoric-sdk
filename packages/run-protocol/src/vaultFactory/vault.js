@@ -92,6 +92,7 @@ const validTransitions = {
  * idInManager: VaultId,
  * manager: InnerVaultManagerBase & GetVaultParams,
  * priceAuthority: ERef<PriceAuthority>,
+ * debtPriceRatio: Ratio,
  * mint: ZCFMint,
  * vaultSeat: ZCFSeat,
  * zcf: ZCF,
@@ -116,6 +117,7 @@ const validTransitions = {
  * @param {VaultId} idInManager
  * @param {ZCFMint} mint
  * @param {ERef<PriceAuthority>} priceAuthority
+ * @param {Ratio} debtPriceRatio
  */
 export const makeInnerVault = (
   zcf,
@@ -124,6 +126,7 @@ export const makeInnerVault = (
   idInManager,
   mint,
   priceAuthority,
+  debtPriceRatio,
 ) => {
   // CONSTANTS
   const collateralBrand = manager.getCollateralBrand();
@@ -145,6 +148,7 @@ export const makeInnerVault = (
     outerUpdater: null,
     phase: VaultPhase.ACTIVE,
     priceAuthority,
+    debtPriceRatio,
     mint,
     zcf,
 
@@ -264,13 +268,15 @@ export const makeInnerVault = (
   const maxDebtFor = async collateralAmount => {
     const quoteAmount = await E(priceAuthority).quoteGiven(
       collateralAmount,
-      debtBrand,
+      debtPriceRatio.denominator.brand,
+    );
+    // floorMultiply to lowball the price estimate
+    const maxDebtAmount = floorMultiplyBy(
+      getAmountOut(quoteAmount),
+      debtPriceRatio,
     );
     // floorDivide because we want the debt ceiling lower
-    return floorDivideBy(
-      getAmountOut(quoteAmount),
-      manager.getLiquidationMargin(),
-    );
+    return floorDivideBy(maxDebtAmount, manager.getLiquidationMargin());
   };
 
   const assertSufficientCollateral = async (

@@ -1,8 +1,13 @@
 // @ts-check
 
 import { E } from '@endo/eventual-send';
-import { makeIssuerKit, AmountMath } from '@agoric/ertp';
-import { makeRatio } from '@agoric/zoe/src/contractSupport/index.js';
+import { makeIssuerKit, AmountMath, AssetKind } from '@agoric/ertp';
+import {
+  floorDivideBy,
+  makeRatio,
+  makeRatioFromAmounts,
+  makeUnitAmount,
+} from '@agoric/zoe/src/contractSupport/index.js';
 import { Far } from '@endo/marshal';
 
 import buildManualTimer from '@agoric/zoe/tools/manualTimer';
@@ -191,8 +196,23 @@ const buildOwner = async (
     E(E(zoe).getInvitationIssuer()).getAmountOf(poserInvitationP),
   ]);
 
+  const runDecimalPlaces = await E.get(E(runBrand).getDisplayInfo())
+    .decimalPlaces;
+  const { brand: priceBrand } = makeIssuerKit(
+    'quatloos',
+    AssetKind.NAT,
+    harden({
+      decimalPlaces: (runDecimalPlaces || 0) + 3, // Arbitrarily different than runDecimalPlaces.
+    }),
+  );
+
+  const debtPriceRatio = await Promise.all(
+    [runBrand, priceBrand].map(makeUnitAmount),
+  ).then(async ([debt, price]) => makeRatioFromAmounts(debt, price));
+
   const terms = makeGovernedTerms(
     priceAuthorityKit.priceAuthority,
+    debtPriceRatio,
     loanTiming,
     installations.liquidateMinimum,
     timer,
@@ -222,10 +242,6 @@ const buildOwner = async (
   const governedInstance = await E(governorFacets.creatorFacet).getInstance();
   const governedPublicFacet = E(zoe).getPublicFacet(governedInstance);
 
-  const {
-    issuers: { RUN: runIssuer },
-  } = await E(zoe).getTerms(governedInstance);
-
   await E(E(governorFacets.creatorFacet).getCreatorFacet()).addVaultType(
     moolaIssuer,
     'Moola',
@@ -235,11 +251,14 @@ const buildOwner = async (
   const QUOTE_INTERVAL = 24n * 60n * 60n;
   const moolaPriceAuthority = await E(priceAuthorityVat).makeFakePriceAuthority(
     harden({
-      issuerIn: moolaIssuer,
-      issuerOut: runIssuer,
       actualBrandIn: moolaBrand,
-      actualBrandOut: runBrand,
-      priceList: [100000n, 120000n, 110000n, 80000n],
+      actualBrandOut: priceBrand,
+      // Scale the priceList by the debtPriceRatio.
+      priceList: [100000n, 120000n, 110000n, 80000n].map(
+        n =>
+          floorDivideBy(AmountMath.make(runBrand, BigInt(n)), debtPriceRatio)
+            .value,
+      ),
       timer,
       quoteInterval: QUOTE_INTERVAL,
     }),
@@ -248,7 +267,7 @@ const buildOwner = async (
   await E(priceAuthorityKit.adminFacet).registerPriceAuthority(
     moolaPriceAuthority,
     moolaBrand,
-    runBrand,
+    priceBrand,
   );
 
   const voteCreator = Far('vaultFactory vote creator', {

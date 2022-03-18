@@ -27,7 +27,10 @@ import {
   getAmountOut,
   getAmountIn,
 } from '@agoric/zoe/src/contractSupport/index.js';
-import { makeRatioFromAmounts } from '@agoric/zoe/src/contractSupport/ratio.js';
+import {
+  makeRatio,
+  makeRatioFromAmounts,
+} from '@agoric/zoe/src/contractSupport/ratio.js';
 import { Far } from '@endo/marshal';
 import { assertElectorateMatches } from '@agoric/governance';
 
@@ -43,10 +46,15 @@ const { details: X } = assert;
  *  {electionManager: Instance,
  *   main: {Electorate: ParamRecord<'invitation'>},
  *   timerService: TimerService,
- *   priceAuthority: ERef<PriceAuthority>}>} zcf
+ *   priceAuthority: ERef<PriceAuthority>,
+ *   debtPriceRatio?: Ratio }>} zcf
  * @param {{feeMintAccess: FeeMintAccess, initialPoserInvitation: Invitation}} privateArgs
  */
 export const start = async (zcf, privateArgs) => {
+  const { feeMintAccess, initialPoserInvitation } = privateArgs;
+  const runMint = await zcf.registerFeeMint('RUN', feeMintAccess);
+  const { issuer: runIssuer, brand: runBrand } = runMint.getIssuerRecord();
+
   const {
     ammPublicFacet,
     priceAuthority,
@@ -55,14 +63,12 @@ export const start = async (zcf, privateArgs) => {
     electionManager,
     main: governedTerms,
     loanTimingParams,
+    debtPriceRatio = makeRatio(1n, runBrand, 1n, runBrand),
   } = zcf.getTerms();
 
   /** @type {Promise<GovernorPublic>} */
   const governorPublic = E(zcf.getZoeService()).getPublicFacet(electionManager);
 
-  const { feeMintAccess, initialPoserInvitation } = privateArgs;
-  const runMint = await zcf.registerFeeMint('RUN', feeMintAccess);
-  const { issuer: runIssuer, brand: runBrand } = runMint.getIssuerRecord();
   zcf.setTestJig(() => ({
     runIssuerRecord: runMint.getIssuerRecord(),
   }));
@@ -134,6 +140,7 @@ export const start = async (zcf, privateArgs) => {
       runMint,
       collateralBrand,
       priceAuthority,
+      debtPriceRatio,
       loanTimingParams,
       vaultParamManager.readonly(),
       reallocateWithFee,

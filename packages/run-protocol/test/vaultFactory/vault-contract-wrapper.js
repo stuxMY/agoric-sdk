@@ -3,14 +3,18 @@
 import '@agoric/zoe/src/types.js';
 
 import { makeIssuerKit, AssetKind, AmountMath } from '@agoric/ertp';
+import { E } from '@endo/far';
 
 import { assert } from '@agoric/assert';
 import buildManualTimer from '@agoric/zoe/tools/manualTimer.js';
 import { makeFakePriceAuthority } from '@agoric/zoe/tools/fakePriceAuthority.js';
 import {
   makeRatio,
+  makeRatioFromAmounts,
   multiplyRatios,
-} from '@agoric/zoe/src/contractSupport/ratio.js';
+  floorDivideBy,
+  makeUnitAmount,
+} from '@agoric/zoe/src/contractSupport/index.js';
 import { Far } from '@endo/marshal';
 
 import { makeNotifierKit } from '@agoric/notifier';
@@ -36,6 +40,19 @@ export async function start(zcf, privateArgs) {
   const runMint = await zcf.registerFeeMint('RUN', privateArgs.feeMintAccess);
   const { brand: runBrand } = runMint.getIssuerRecord();
 
+  const runDecimalPlaces = await E.get(E(runBrand).getDisplayInfo())
+    .decimalPlaces;
+  const { brand: priceBrand } = makeIssuerKit(
+    'USD',
+    AssetKind.NAT,
+    harden({
+      decimalPlaces: (runDecimalPlaces || 0) + 3, // Arbitrarily different than runDecimalPlaces.
+    }),
+  );
+
+  const debtPriceRatio = await Promise.all(
+    [runBrand, priceBrand].map(makeUnitAmount),
+  ).then(async ([debt, price]) => makeRatioFromAmounts(debt, price));
   const { zcfSeat: vaultFactorySeat } = zcf.makeEmptySeatKit();
 
   let vaultCounter = 0;
@@ -95,8 +112,13 @@ export async function start(zcf, privateArgs) {
   const timer = buildManualTimer(console.log, 0n, DAY);
   const options = {
     actualBrandIn: collateralBrand,
-    actualBrandOut: runBrand,
-    priceList: [80],
+    actualBrandOut: priceBrand,
+    // Scale the priceList by the debtPriceRatio.
+    priceList: [80].map(
+      n =>
+        floorDivideBy(AmountMath.make(runBrand, BigInt(n)), debtPriceRatio)
+          .value,
+    ),
     tradeList: undefined,
     timer,
     quoteMint: makeIssuerKit('quote', AssetKind.SET).mint,
@@ -113,6 +135,7 @@ export async function start(zcf, privateArgs) {
     String(vaultCounter++),
     runMint,
     priceAuthority,
+    debtPriceRatio,
   );
 
   const advanceRecordingPeriod = () => {

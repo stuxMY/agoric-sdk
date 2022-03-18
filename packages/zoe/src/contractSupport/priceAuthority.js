@@ -5,9 +5,21 @@ import { Far } from '@endo/marshal';
 import { assert, details as X } from '@agoric/assert';
 import { makePromiseKit } from '@endo/promise-kit';
 import { AmountMath } from '@agoric/ertp';
+import { Nat } from '@agoric/nat';
 import { makeNotifier } from '@agoric/notifier';
 
 import '../../exported.js';
+
+/**
+ * Create a "unit" amount, which is 10**decimalPlaces for a fungible brand.
+ *
+ * @param {Brand<'nat'>} brand
+ */
+export const makeUnitAmount = async brand => {
+  const decimals = await E.get(E(brand).getDisplayInfo()).decimalPlaces;
+  return AmountMath.make(brand, 10n ** Nat(decimals || 0));
+};
+harden(makeUnitAmount);
 
 /**
  * @callback CompareAmount
