@@ -24,6 +24,7 @@
     "lerna": "^3.20.2",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.6.0",
+    "prettier-plugin-jsdoc": "^0.3.31",
     "typescript": "~4.6.2"
   },
   "engines": {
@@ -34,8 +35,16 @@
   },
   "prettier": {
     "arrowParens": "avoid",
-    "trailingComma": "all",
-    "singleQuote": true
+    "overrides": [{
+      "files": "packages/run-protocol/**/*.{js,ts}",
+      "options": {
+        "plugins": ["prettier-plugin-jsdoc"],
+        "jsdocAddDefaultToDescription": false,
+        "jsdocCapitalizeDescription": false
+      }
+    }],
+    "singleQuote": true,
+    "trailingComma": "all"
   },
   "scripts": {
     "OFF-clean": "yarn workspaces run clean",
@@ -43,8 +52,8 @@
     "lerna": "lerna",
     "link-cli": "yarn run create-agoric-cli",
     "create-agoric-cli": "node ./scripts/create-agoric-cli.cjs",
-    "format": "yarn prettier --write .github golang packages",
-    "lint:format": "yarn prettier --check .github golang packages",
+    "format": "yarn prettier --no-plugin-search --write .github golang packages",
+    "lint:format": "yarn prettier --no-plugin-search --check .github golang packages",
     "lint-fix": "yarn lerna run --no-bail lint-fix",
     "lint": "run-s --continue-on-error lint:*",
     "lint:packages": "yarn lerna run --no-bail lint",
