@@ -23,7 +23,7 @@ const { details: X, quote: q } = assert;
 const trace = makeTracer('IV');
 
 /**
- * @file This Has most of the logic for a Vault, to borrow RUN against collateral.
+ * @file This has most of the logic for a Vault, to borrow RUN against collateral.
  *
  *   The logic here is for InnerVault which is the majority of logic of vaults but
  *   the user view is the `vault` value contained in VaultKit.
