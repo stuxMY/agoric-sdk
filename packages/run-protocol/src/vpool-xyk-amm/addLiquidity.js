@@ -66,8 +66,6 @@ export { imbalancedRequest };
  *     targetK = targetX * targetY = desiredRatio * (startK / desiredRatio)
  *
  * Since startK/endK is less than one, and we have to worry about early loss of
- *
- * Since startK/endK is less than one, and we have to worry about early loss of
  * precision, we round and convert to bigint as the last step
  *
  * If the desired ratio (the ratio of the sums of contributed amounts and pool
