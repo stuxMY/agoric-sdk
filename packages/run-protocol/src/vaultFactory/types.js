@@ -46,9 +46,10 @@
  */
 
 /**
- * @callback ReallocateWithFee Transfer the indicated amount to the
- *   vaultFactory's reward pool, taken from the `fromSeat`. Then reallocate over
- *   all the seat arguments and the rewardPoolSeat.
+ * Transfer the indicated amount to the vaultFactory's reward pool, taken from
+ * the `fromSeat`. Then reallocate over all the seat arguments and the rewardPoolSeat.
+ *
+ * @callback ReallocateWithFee
  * @param {Amount} amount
  * @param {ZCFSeat} fromSeat
  * @param {ZCFSeat} [otherSeat]
