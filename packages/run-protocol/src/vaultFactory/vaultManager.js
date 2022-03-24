@@ -119,7 +119,7 @@ export const makeVaultManager = (
   let compoundedInterest = makeRatio(100n, debtBrand); // starts at 1.0, no interest
 
   /**
-   * timestamp of most recent update to interest
+   * Timestamp of most recent update to interest
    *
    * @type {bigint}
    */

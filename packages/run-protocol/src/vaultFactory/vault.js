@@ -23,7 +23,7 @@ const { details: X, quote: q } = assert;
 const trace = makeTracer('IV');
 
 /**
- * @file This has most of the logic for a Vault, to borrow RUN against collateral.
+ * @file This Has most of the logic for a Vault, to borrow RUN against collateral.
  *
  *   The logic here is for InnerVault which is the majority of logic of vaults but
  *   the user view is the `vault` value contained in VaultKit.
@@ -35,7 +35,7 @@ const trace = makeTracer('IV');
  *   - `new` is a prefix for values that describe the result of executing a
  *       transaction; e.g., `debt` is the value before the txn, and `newDebt`
  *       will be value if the txn completes.
- *   - the absence of one of these implies the opposite, so `newDebt` is the future
+ *   - The absence of one of these implies the opposite, so `newDebt` is the future
  *       value fo `debt`, as computed based on values after any `await`
  */
 
@@ -84,7 +84,7 @@ const validTransitions = {
  * @property {(oldDebt: Amount, newDebt: Amount) => void} applyDebtDelta
  * @property {() => Brand} getCollateralBrand
  * @property {ReallocateWithFee} reallocateWithFee
- * @property {() => Ratio} getCompoundedInterest - coefficient on existing debt
+ * @property {() => Ratio} getCompoundedInterest - Coefficient on existing debt
  *   to calculate new debt
  * @property {(
  *   oldDebt: Amount,
@@ -197,7 +197,7 @@ export const makeInnerVault = (
    * Called whenever the debt is paid or created through a transaction, but not
    * for interest accrual.
    *
-   * @param {Amount} newDebt - principal and all accrued interest
+   * @param {Amount} newDebt - Principal and all accrued interest
    */
   const updateDebtSnapshot = newDebt => {
     // update local state
@@ -209,9 +209,9 @@ export const makeInnerVault = (
    * Update the debt balance and propagate upwards to maintain aggregate debt
    * and liquidation order.
    *
-   * @param {Amount} oldDebt - prior principal and all accrued interest
-   * @param {Amount} oldCollateral - actual collateral
-   * @param {Amount} newDebt - actual principal and all accrued interest
+   * @param {Amount} oldDebt - Prior principal and all accrued interest
+   * @param {Amount} oldCollateral - Actual collateral
+   * @param {Amount} newDebt - Actual principal and all accrued interest
    */
   const updateDebtAccounting = (oldDebt, oldCollateral, newDebt) => {
     updateDebtSnapshot(newDebt);
@@ -247,7 +247,7 @@ export const makeInnerVault = (
    * by their debt-to-collateral ratios without having to mutate the debts as
    * the interest accrues.
    *
-   * @returns {Amount<'nat'>} as if the vault was open at the launch of this
+   * @returns {Amount<'nat'>} As if the vault was open at the launch of this
    *   manager, before any interest accrued
    * @see getActualDebAmount
    */

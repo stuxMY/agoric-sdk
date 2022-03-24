@@ -39,8 +39,7 @@
       "files": "packages/run-protocol/**/*.{js,ts}",
       "options": {
         "plugins": ["prettier-plugin-jsdoc"],
-        "jsdocAddDefaultToDescription": false,
-        "jsdocCapitalizeDescription": false
+        "jsdocAddDefaultToDescription": false
       }
     }],
     "singleQuote": true,

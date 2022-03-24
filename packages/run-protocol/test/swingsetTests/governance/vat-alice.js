@@ -15,7 +15,7 @@ const { details: X, quote: q } = assert;
  * @param {ZoeService} zoe
  * @param {Brand[]} brands
  * @param {Payment[]} payments
- * @param {ManualTimer} timer configured to tick one day (@see setup.js)
+ * @param {ManualTimer} timer Configured to tick one day (@see setup.js)
  * @returns {Promise<{ startTest: Function }>}
  */
 const build = async (log, zoe, brands, payments, timer) => {

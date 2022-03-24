@@ -58,7 +58,7 @@ export { imbalancedRequest };
  * trade that maintains K, but changes the ratio, so we can add liquidity at the
  * desired ratio.
  *
- * endX = poolX + giveX; endY = poolY + giveY desiredRatio = endX / endY targetY
+ * EndX = poolX + giveX; endY = poolY + giveY desiredRatio = endX / endY targetY
  * = sqrt(startK / desiredRatio) targetX = desiredRatio * targetY so targetK
  * equals startK because we square targetY targetK = targetX * targetY =
  * desiredRatio * (startK / desiredRatio)

@@ -41,7 +41,7 @@ export const currentDebtToCollateral = vault =>
  * InnerVaults, ordered by their liquidation ratio so that all the vaults below
  * a threshold can be quickly found and liquidated.
  *
- * @param {() => void} reschedulePriceCheck called when there is a new
+ * @param {() => void} reschedulePriceCheck Called when there is a new
  *   least-collateralized vault
  */
 export const makePrioritizedVaults = reschedulePriceCheck => {
@@ -72,7 +72,7 @@ export const makePrioritizedVaults = reschedulePriceCheck => {
     }
   };
 
-  /** @returns {Ratio | undefined} actual debt over collateral */
+  /** @returns {Ratio | undefined} Actual debt over collateral */
   const firstDebtRatio = () => {
     if (vaults.getSize() === 0) {
       return undefined;

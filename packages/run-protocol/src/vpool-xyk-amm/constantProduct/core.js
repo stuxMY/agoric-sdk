@@ -61,10 +61,10 @@ const ceilMultiplyKeepBrand = (amount, ratio) => {
  *     deltaY = (deltaXOverX / (1 + deltaXOverX)) * y;
  *     Equivalently: (deltaX / (deltaX + x)) * y;
  *
- * @param {Amount} x - the amount of Brand X in pool
- * @param {Amount} y - the amount of Brand Y the pool
- * @param {Amount} deltaX - the amount of Brand X to be added
- * @returns {Amount} deltaY - the amount of Brand Y to be taken out
+ * @param {Amount} x - The amount of Brand X in pool
+ * @param {Amount} y - The amount of Brand Y the pool
+ * @param {Amount} deltaX - The amount of Brand X to be added
+ * @returns {Amount} DeltaY - the amount of Brand Y to be taken out
  */
 export const calcDeltaYSellingX = (x, y, deltaX) => {
   const deltaXPlusX = AmountMath.add(deltaX, x);
@@ -80,12 +80,12 @@ export const calcDeltaYSellingX = (x, y, deltaX) => {
  * pool for that asset. swapInReduced calls this with the calculated amountOut
  * to find out if less than the offeredAmountIn would be sufficient.
  *
- * deltaX = (deltaYOverY/(1 - deltaYOverY))*x Equivalently: (deltaY / (Y - deltaY )) * x
+ * DeltaX = (deltaYOverY/(1 - deltaYOverY))*x Equivalently: (deltaY / (Y - deltaY )) * x
  *
- * @param {Amount} x - the amount of Brand X in the pool
- * @param {Amount} y - the amount of Brand Y in the pool
- * @param {Amount} deltaY - the amount of Brand Y to be taken out
- * @returns {Amount} deltaX - the amount of Brand X to be added
+ * @param {Amount} x - The amount of Brand X in the pool
+ * @param {Amount} y - The amount of Brand Y in the pool
+ * @param {Amount} deltaY - The amount of Brand Y to be taken out
+ * @returns {Amount} DeltaX - the amount of Brand X to be added
  */
 export const calcDeltaXSellingX = (x, y, deltaY) => {
   const yMinusDeltaY = AmountMath.subtract(y, deltaY);

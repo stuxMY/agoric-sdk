@@ -73,7 +73,7 @@ export const start = async (zcf, privateArgs) => {
     runIssuerRecord: runMint.getIssuerRecord(),
   }));
 
-  /** a powerful object; can modify the invitation */
+  /** A powerful object; can modify the invitation */
   const electorateParamManager = await makeElectorateParamManager(
     zcf.getZoeService(),
     initialPoserInvitation,
@@ -122,7 +122,7 @@ export const start = async (zcf, privateArgs) => {
       `Collateral brand ${collateralBrand} has already been added`,
     );
 
-    /** a powerful object; can modify parameters */
+    /** A powerful object; can modify parameters */
     const vaultParamManager = makeVaultParamManager(rates);
     vaultParamManagers.init(collateralBrand, vaultParamManager);
 
@@ -206,7 +206,7 @@ export const start = async (zcf, privateArgs) => {
   };
 
   const publicFacet = Far('vaultFactory public facet', {
-    /** @deprecated use makeVaultInvitation instead */
+    /** @deprecated Use makeVaultInvitation instead */
     makeLoanInvitation: makeVaultInvitation,
     makeVaultInvitation,
     getCollaterals,

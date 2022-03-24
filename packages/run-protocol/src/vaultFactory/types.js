@@ -21,9 +21,9 @@
 
 /**
  * @typedef {Object} Rates
- * @property {Ratio} liquidationMargin - margin below which collateral will be
+ * @property {Ratio} liquidationMargin - Margin below which collateral will be
  *   liquidated to satisfy the debt.
- * @property {Ratio} interestRate - annual interest rate charged on loans
+ * @property {Ratio} interestRate - Annual interest rate charged on loans
  * @property {Ratio} loanFee - The fee (in BasisPoints) charged when opening or
  *   increasing a loan.
  */
@@ -37,7 +37,7 @@
  */
 
 /**
- * @typedef {Object} VaultFactory - the creator facet
+ * @typedef {Object} VaultFactory - The creator facet
  * @property {AddVaultType} addVaultType
  * @property {() => Promise<Collateral[]>} getCollaterals
  * @property {() => Allocation} getRewardAllocation,
@@ -110,8 +110,8 @@
 /**
  * @typedef {Object} DebtStatus
  * @property {Timestamp} latestInterestUpdate
- * @property {NatValue} interest interest accrued since latestInterestUpdate
- * @property {NatValue} newDebt total including principal and interest
+ * @property {NatValue} interest Interest accrued since latestInterestUpdate
+ * @property {NatValue} newDebt Total including principal and interest
  */
 
 /**
@@ -123,9 +123,9 @@
 
 /**
  * @typedef {Object} CalculatorKit
- * @property {Calculate} calculate calculate new debt for charging periods up to
+ * @property {Calculate} calculate Calculate new debt for charging periods up to
  *   the present.
- * @property {Calculate} calculateReportingPeriod calculate new debt for
+ * @property {Calculate} calculateReportingPeriod Calculate new debt for
  *   reporting periods up to the present. If some charging periods have elapsed
  *   that don't constitute whole reporting periods, the time is not updated past
  *   them and interest is not accumulated for them.

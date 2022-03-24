@@ -57,7 +57,7 @@ const decodeNumber = encoded => {
  * Overcollateralized are greater than one. The more undercollaterized the
  * smaller in [0-1].
  *
- * @param {Amount<'nat'>} normalizedDebt normalized (not actual) total debt
+ * @param {Amount<'nat'>} normalizedDebt Normalized (not actual) total debt
  * @param {Amount<'nat'>} collateral
  * @returns {number}
  */
@@ -72,10 +72,10 @@ const collateralizationRatio = (normalizedDebt, collateral) => {
 /**
  * Sorts by ratio in descending debt. Ordering of vault id is undefined.
  *
- * @param {Amount<'nat'>} normalizedDebt normalized (not actual) total debt
+ * @param {Amount<'nat'>} normalizedDebt Normalized (not actual) total debt
  * @param {Amount<'nat'>} collateral
  * @param {VaultId} vaultId
- * @returns {string} lexically sortable string in which highest
+ * @returns {string} Lexically sortable string in which highest
  *   debt-to-collateral is earliest
  */
 const toVaultKey = (normalizedDebt, collateral, vaultId) => {
