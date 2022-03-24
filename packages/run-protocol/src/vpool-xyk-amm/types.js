@@ -7,7 +7,7 @@
  */
 
 /**
- * @typedef {Object} VPool - Virtual pool for price quotes and trading
+ * @typedef {Object} VPool Virtual pool for price quotes and trading
  * @property {(amountIn: Amount, amountOut: Amount) => VPoolPriceQuote} getInputPrice
  * @property {(amountIn: Amount, amountOut: Amount) => VPoolPriceQuote} getOutputPrice
  * @property {(seat: ZCFSeat, amountIn: Amount, amountOut: Amount) => string} swapIn
@@ -40,7 +40,7 @@
  */
 
 /**
- * @typedef {Object} VPoolInternalFacet - Virtual pool for price quotes and trading
+ * @typedef {Object} VPoolInternalFacet Virtual pool for price quotes and trading
  * @property {GetDoublePoolSwapQuote} getPriceForInput
  * @property {GetDoublePoolSwapQuote} getPriceForOutput
  */
@@ -64,7 +64,7 @@
 
 /**
  * @template T
- * @typedef {Object} VPoolWrapper - Wrapper holding external and internal facets
+ * @typedef {Object} VPoolWrapper Wrapper holding external and internal facets
  * @property {VPool} externalFacet
  * @property {T} internalFacet
  */
@@ -116,7 +116,7 @@
  *   using makeSwapOutInvitation at the current price
  * @property {(brand: Brand) => Record<string, Amount>} getPoolAllocation Get an
  *   AmountKeywordRecord showing the current balances in the pool for brand.
- * @property {() => Issuer} getQuoteIssuer - Get the Issuer that attests to the
+ * @property {() => Issuer} getQuoteIssuer Get the Issuer that attests to the
  *   prices in the priceQuotes issued by the PriceAuthorities
  * @property {(brand: Brand) => {
  *   toCentral: PriceAuthority;
@@ -133,6 +133,6 @@
  * @param {ERef<ZoeService>} zoe
  * @param {bigint} poolFeeBP
  * @param {bigint} protocolFeeBP
- * @param {Invitation} poserInvitation - Invitation for the question poser
+ * @param {Invitation} poserInvitation Invitation for the question poser
  * @returns {Promise<ParamManagerFull>}
  */

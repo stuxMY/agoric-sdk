@@ -84,8 +84,8 @@ const validTransitions = {
  * @property {(oldDebt: Amount, newDebt: Amount) => void} applyDebtDelta
  * @property {() => Brand} getCollateralBrand
  * @property {ReallocateWithFee} reallocateWithFee
- * @property {() => Ratio} getCompoundedInterest - Coefficient on existing debt
- *   to calculate new debt
+ * @property {() => Ratio} getCompoundedInterest Coefficient on existing debt to
+ *   calculate new debt
  * @property {(
  *   oldDebt: Amount,
  *   oldCollateral: Amount,
@@ -197,7 +197,7 @@ export const makeInnerVault = (
    * Called whenever the debt is paid or created through a transaction, but not
    * for interest accrual.
    *
-   * @param {Amount} newDebt - Principal and all accrued interest
+   * @param {Amount} newDebt Principal and all accrued interest
    */
   const updateDebtSnapshot = newDebt => {
     // update local state
@@ -209,9 +209,9 @@ export const makeInnerVault = (
    * Update the debt balance and propagate upwards to maintain aggregate debt
    * and liquidation order.
    *
-   * @param {Amount} oldDebt - Prior principal and all accrued interest
-   * @param {Amount} oldCollateral - Actual collateral
-   * @param {Amount} newDebt - Actual principal and all accrued interest
+   * @param {Amount} oldDebt Prior principal and all accrued interest
+   * @param {Amount} oldCollateral Actual collateral
+   * @param {Amount} newDebt Actual principal and all accrued interest
    */
   const updateDebtAccounting = (oldDebt, oldCollateral, newDebt) => {
     updateDebtSnapshot(newDebt);

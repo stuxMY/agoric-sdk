@@ -28,8 +28,8 @@ const { details: X } = assert;
  * @param {Brand} centralBrand
  * @param {ERef<Timer>} timer
  * @param {IssuerKit} quoteIssuerKit
- * @param {() => bigint} getProtocolFeeBP - Retrieve governed protocol fee value
- * @param {() => bigint} getPoolFeeBP - Retrieve governed pool fee value
+ * @param {() => bigint} getProtocolFeeBP Retrieve governed protocol fee value
+ * @param {() => bigint} getPoolFeeBP Retrieve governed pool fee value
  * @param {ZCFSeat} protocolSeat
  */
 export const makeAddPool = (
@@ -253,7 +253,7 @@ export const makeAddPool = (
    * must not have been already used
    *
    * @param {Issuer} secondaryIssuer
-   * @param {Keyword} keyword - Will be used in the terms.issuers for the
+   * @param {Keyword} keyword Will be used in the terms.issuers for the
    *   contract, but not used otherwise
    */
   const addPool = async (secondaryIssuer, keyword) => {

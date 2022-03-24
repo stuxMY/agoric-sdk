@@ -21,10 +21,10 @@
 
 /**
  * @typedef {Object} Rates
- * @property {Ratio} liquidationMargin - Margin below which collateral will be
+ * @property {Ratio} liquidationMargin Margin below which collateral will be
  *   liquidated to satisfy the debt.
- * @property {Ratio} interestRate - Annual interest rate charged on loans
- * @property {Ratio} loanFee - The fee (in BasisPoints) charged when opening or
+ * @property {Ratio} interestRate Annual interest rate charged on loans
+ * @property {Ratio} loanFee The fee (in BasisPoints) charged when opening or
  *   increasing a loan.
  */
 
@@ -37,7 +37,7 @@
  */
 
 /**
- * @typedef {Object} VaultFactory - The creator facet
+ * @typedef {Object} VaultFactory The creator facet
  * @property {AddVaultType} addVaultType
  * @property {() => Promise<Collateral[]>} getCollaterals
  * @property {() => Allocation} getRewardAllocation,
@@ -60,11 +60,11 @@
  * @property {() => Ratio} getLiquidationMargin
  * @property {() => Ratio} getLoanFee
  * @property {() => Promise<PriceQuote>} getCollateralQuote
- * @property {() => Ratio} getInterestRate - The annual interest rate on a loan
- * @property {() => RelativeTime} getChargingPeriod - The period (in seconds) at
+ * @property {() => Ratio} getInterestRate The annual interest rate on a loan
+ * @property {() => RelativeTime} getChargingPeriod The period (in seconds) at
  *   which interest is charged to the loan.
- * @property {() => RelativeTime} getRecordingPeriod - The period (in seconds)
- *   at which interest is recorded to the loan.
+ * @property {() => RelativeTime} getRecordingPeriod The period (in seconds) at
+ *   which interest is recorded to the loan.
  */
 
 /** @typedef {string} VaultId */

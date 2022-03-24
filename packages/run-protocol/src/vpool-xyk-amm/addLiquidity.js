@@ -58,10 +58,14 @@ export { imbalancedRequest };
  * trade that maintains K, but changes the ratio, so we can add liquidity at the
  * desired ratio.
  *
- * EndX = poolX + giveX; endY = poolY + giveY desiredRatio = endX / endY targetY
- * = sqrt(startK / desiredRatio) targetX = desiredRatio * targetY so targetK
- * equals startK because we square targetY targetK = targetX * targetY =
- * desiredRatio * (startK / desiredRatio)
+ *     endX = poolX + giveX;   endY = poolY + giveY
+ *     desiredRatio = endX / endY
+ *     targetY = sqrt(startK / desiredRatio)
+ *     targetX = desiredRatio * targetY
+ *       so targetK equals startK because we square targetY
+ *     targetK = targetX * targetY = desiredRatio * (startK / desiredRatio)
+ *
+ * Since startK/endK is less than one, and we have to worry about early loss of
  *
  * Since startK/endK is less than one, and we have to worry about early loss of
  * precision, we round and convert to bigint as the last step
