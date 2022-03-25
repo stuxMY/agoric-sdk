@@ -89,7 +89,7 @@ export const makeInterestCalculator = (
 };
 
 /**
- * CompoundedInterest *= (new debt) / (prior total debt)
+ * `compoundedInterest *= (new debt) / (prior total debt)`
  *
  * @param {Ratio} priorCompoundedInterest
  * @param {NatValue} priorDebt

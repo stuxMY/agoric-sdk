@@ -80,7 +80,8 @@ export const calcDeltaYSellingX = (x, y, deltaX) => {
  * pool for that asset. swapInReduced calls this with the calculated amountOut
  * to find out if less than the offeredAmountIn would be sufficient.
  *
- * DeltaX = (deltaYOverY/(1 deltaYOverY))*x Equivalently: (deltaY / (Y - deltaY )) * x
+ *     deltaX = (deltaYOverY / (1 - deltaYOverY)) * x;
+ *     Equivalently: (deltaY / (Y - deltaY)) * x;
  *
  * @param {Amount} x The amount of Brand X in the pool
  * @param {Amount} y The amount of Brand Y in the pool
