@@ -182,7 +182,7 @@
  *   economicCommitteeCreatorFacet: CommitteeElectorateCreatorFacet,
  *   getRUNBundle: { moduleFormat: string },
  *   ammBundle: SourceBundle,
- *   vaultBundles: Record<string, SourceBundle>,
+ *   vaultBundles: Record<'VaultFactory' | 'liquidate', SourceBundle>,
  *   centralSupplyBundle: SourceBundle,
  *   mintHolderBundle: SourceBundle,
  *   feeMintAccess: FeeMintAccess,
