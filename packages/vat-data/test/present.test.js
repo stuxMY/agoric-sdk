@@ -5,7 +5,7 @@ test('methods available', async t => {
   defineKind(
     'test',
     () => {},
-    () => {},
+    {},
   );
   t.pass();
 });

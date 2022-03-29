@@ -10,7 +10,7 @@ interface KindDefiner {
   <P, S, K>(
     tag: string,
     init: (...args: P) => S,
-    actualize: (state: S) => K,
+    behavior: K,
     finish?: () => void,
   ): (...args: P) => K;
 }

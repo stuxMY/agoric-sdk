@@ -411,6 +411,24 @@ export function makeVirtualObjectManager(
     }
   }
 
+  function copyMethods(behaviorTemplate) {
+    const obj = {};
+    for (const [name, func] of Object.entries(behaviorTemplate)) {
+      assert.typeof(func, 'function');
+      obj[name] = func;
+    }
+    return obj;
+  }
+
+  function bindMethods(context, behaviorTemplate) {
+    const obj = {};
+    for (const [name, func] of Object.entries(behaviorTemplate)) {
+      assert.typeof(func, 'function');
+      obj[name] = (...args) => Reflect.apply(func, null, [context, ...args]);
+    }
+    return obj;
+  }
+
   /**
    * Define a new kind of virtual object.
    *
@@ -421,13 +439,14 @@ export function makeVirtualObjectManager(
    * @param {*} init  An initialization function that will return the initial
    *    state of a new instance of the kind of virtual object being defined.
    *
-   * @param {*} actualize  An actualization function that will provide the
-   *    in-memory representative object that wraps behavior around the
-   *    virtualized state of an instance of the object kind being defined.
+   * @param {*} behavior A bag of functions (in the case of a single-faceted
+   *    object) or a bag of bags of functions (in the case of a multi-faceted
+   *    object) that will become the methods of the object or its facets.
    *
-   * @param {*} finish  An optional finisher function that can perform
-   *    post-creation initialization operations, such as inserting the new
-   *    object in a cyclical object graph.
+   * @param {*} options Additional options to configure the virtual object kind
+   *    being defined.  Currently the only supported option is `finish`, an
+   *    optional finisher function that can perform post-creation initialization
+   *    operations, such as inserting the new object in a cyclical object graph.
    *
    * @param {boolean} durable  A flag indicating whether or not the newly defined
    *    kind should be a durable kind.
@@ -496,17 +515,60 @@ export function makeVirtualObjectManager(
    * reference to the state is nulled out and the object holding the state
    * becomes garbage collectable.
    */
-  function defineKindInternal(kindID, tag, init, actualize, finish, durable) {
+  function defineKindInternal(kindID, tag, init, behavior, options, durable) {
+    const finish = options ? options.finish : undefined;
     let nextInstanceID = 1;
+    let facetNames;
+    let behaviorTemplate;
 
-    function makeRepresentative(innerSelf, initializing, proForma) {
-      if (!proForma) {
-        assert(
-          innerSelf.repCount === 0,
-          X`${innerSelf.baseRef} already has a representative`,
-        );
-        innerSelf.repCount += 1;
+    const facetiousness = assessFacetiousness(behavior);
+    switch (facetiousness) {
+      case 'one': {
+        facetNames = null;
+        behaviorTemplate = copyMethods(behavior);
+        break;
       }
+      case 'many': {
+        facetNames = Object.getOwnPropertyNames(behavior).sort();
+        assert(
+          facetNames.length > 1,
+          'a multi-facet object must have multiple facets',
+        );
+        behaviorTemplate = {};
+        for (const name of facetNames) {
+          behaviorTemplate[name] = copyMethods(behavior[name]);
+        }
+        break;
+      }
+      case 'not':
+        assert.fail(X`invalid behavior specifier for ${q(tag)}`);
+      default:
+        assert.fail(X`unexepected facetiousness: ${q(facetiousness)}`);
+    }
+    vrm.registerKind(kindID, reanimate, deleteStoredVO, durable);
+    vrm.rememberFacetNames(kindID, facetNames);
+    harden(behaviorTemplate);
+
+    function actualize(state) {
+      if (facetNames === null) {
+        const context = { state };
+        context.self = bindMethods(context, behaviorTemplate);
+        return context.self;
+      } else {
+        const context = { state, facets: {} };
+        for (const name of facetNames) {
+          context.facets[name] = bindMethods(context, behaviorTemplate[name]);
+        }
+        return context.facets;
+      }
+    }
+
+    function makeRepresentative(innerSelf, initializing) {
+      assert(
+        innerSelf.repCount === 0,
+        X`${innerSelf.baseRef} already has a representative`,
+      );
+      innerSelf.repCount += 1;
 
       function ensureState() {
         if (innerSelf.rawState) {
@@ -552,53 +614,30 @@ export function makeVirtualObjectManager(
       const self = actualize(wrappedState);
       let toHold;
       let toExpose;
-      const facetiousness = assessFacetiousness(self);
-      switch (facetiousness) {
-        case 'one': {
-          toHold = Far(tag, self);
-          vrm.checkOrAcquireFacetNames(kindID, null);
-          toExpose = toHold;
-          break;
+      if (facetNames === null) {
+        toHold = Far(tag, self);
+        toExpose = toHold;
+      } else {
+        toExpose = {};
+        toHold = [];
+        for (const facetName of facetNames) {
+          const facet = Far(`${tag} ${facetName}`, self[facetName]);
+          toExpose[facetName] = facet;
+          toHold.push(facet);
+          facetToCohort.set(facet, toHold);
         }
-        case 'many': {
-          toExpose = {};
-          toHold = [];
-          const facetNames = Object.getOwnPropertyNames(self).sort();
-          assert(
-            facetNames.length > 1,
-            'a multi-facet object must have multiple facets',
-          );
-          vrm.checkOrAcquireFacetNames(kindID, facetNames);
-          for (const facetName of facetNames) {
-            const facet = Far(`${tag} ${facetName}`, self[facetName]);
-            toExpose[facetName] = facet;
-            toHold.push(facet);
-            facetToCohort.set(facet, toHold);
-          }
-          harden(toExpose);
-          break;
-        }
-        case 'not':
-          assert.fail(X`invalid self actualization for ${q(tag)}`);
-        default:
-          assert.fail(X`unexepected facetiousness: ${q(facetiousness)}`);
+        harden(toExpose);
       }
-      if (!proForma) {
-        innerSelf.representative = toHold;
-        stateToRepresentative.set(wrappedState, toHold);
-      }
+      innerSelf.representative = toHold;
+      stateToRepresentative.set(wrappedState, toHold);
       return [toHold, toExpose, wrappedState];
     }
 
-    function reanimate(baseRef, proForma) {
+    function reanimate(baseRef) {
       // kdebug(`vo reanimate ${baseRef}`);
       const innerSelf = cache.lookup(baseRef, false);
-      const [toHold] = makeRepresentative(innerSelf, false, proForma);
-      if (proForma) {
-        return null;
-      } else {
-        return toHold;
-      }
+      const [toHold] = makeRepresentative(innerSelf, false);
+      return toHold;
     }
 
     function deleteStoredVO(baseRef) {
@@ -614,8 +653,6 @@ export function makeVirtualObjectManager(
       syscall.vatstoreDelete(`vom.${baseRef}`);
       return doMoreGC;
     }
-
-    vrm.registerKind(kindID, reanimate, deleteStoredVO, durable);
 
     function makeNewInstance(...args) {
       const baseRef = `o+${kindID}/${nextInstanceID}`;
@@ -635,11 +672,7 @@ export function makeVirtualObjectManager(
         rawState[prop] = data;
       }
       const innerSelf = { baseRef, rawState, repCount: 0 };
-      const [toHold, toExpose, state] = makeRepresentative(
-        innerSelf,
-        true,
-        false,
-      );
+      const [toHold, toExpose, state] = makeRepresentative(innerSelf, true);
       registerValue(baseRef, toHold, Array.isArray(toHold));
       if (finish) {
         finish(state, toExpose);
@@ -651,15 +684,15 @@ export function makeVirtualObjectManager(
     return makeNewInstance;
   }
 
-  function defineKind(tag, init, actualize, finish) {
+  function defineKind(tag, init, behavior, options) {
     const kindID = `${allocateExportID()}`;
-    return defineKindInternal(kindID, tag, init, actualize, finish, false);
+    return defineKindInternal(kindID, tag, init, behavior, options, false);
   }
 
   let kindIDID;
   const kindDescriptors = new WeakMap();
 
-  function reanimateDurableKindID(vobjID, _proforma) {
+  function reanimateDurableKindID(vobjID) {
     const { subid: kindID } = parseVatSlot(vobjID);
     const raw = syscall.vatstoreGet(`vom.kind.${kindID}`);
     assert(raw, X`unknown kind ID ${kindID}`);
@@ -688,11 +721,11 @@ export function makeVirtualObjectManager(
     return kindHandle;
   };
 
-  function defineDurableKind(kindHandle, init, actualize, finish) {
+  function defineDurableKind(kindHandle, init, behavior, options) {
     const durableKindDescriptor = kindDescriptors.get(kindHandle);
     assert(durableKindDescriptor);
     const { kindID, tag } = durableKindDescriptor;
-    return defineKindInternal(kindID, tag, init, actualize, finish, true);
+    return defineKindInternal(kindID, tag, init, behavior, options, true);
   }
 
   function countWeakKeysForCollection(collection) {

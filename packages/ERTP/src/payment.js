@@ -12,9 +12,9 @@ export const makePaymentMaker = (allegedName, brand) => {
   const makePayment = defineKind(
     `${allegedName} payment`,
     () => ({}),
-    () => ({
+    {
       getAllegedBrand: () => brand,
-    }),
+    },
   );
   return makePayment;
 };

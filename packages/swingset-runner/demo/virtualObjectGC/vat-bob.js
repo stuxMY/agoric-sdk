@@ -6,17 +6,17 @@ export function buildRootObject(_vatPowers) {
   const makeThing = defineKind(
     'thing',
     label => ({ label }),
-    state => ({
-      getLabel: () => state.label,
-    }),
+    {
+      getLabel: ({ state }) => state.label,
+    },
   );
 
   const makeVirtualHolder = defineKind(
     'holder',
     value => ({ value }),
-    state => ({
-      getValue: () => state.value,
-    }),
+    {
+      getValue: ({ state }) => state.value,
+    },
   );
 
   const cacheDisplacer = makeThing('cacheDisplacer');

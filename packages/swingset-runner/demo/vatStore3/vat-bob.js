@@ -8,9 +8,9 @@ export function buildRootObject(_vatPowers) {
   const makeThing = defineKind(
     'thing',
     label => ({ label }),
-    state => ({
-      getLabel: () => state.label,
-    }),
+    {
+      getLabel: ({ state }) => state.label,
+    },
   );
 
   let nextThingNumber = 0;
