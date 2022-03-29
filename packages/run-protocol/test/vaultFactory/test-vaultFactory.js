@@ -34,6 +34,7 @@ import { startVaultFactory } from '../../src/econ-behaviors.js';
 import '../../src/vaultFactory/types.js';
 import * as Collect from '../../src/collect.js';
 import { calculateCurrentDebt } from '../../src/interest-math.js';
+import { M, matches } from '@agoric/store';
 
 // #region Support
 
@@ -2361,7 +2362,18 @@ test('addVaultType: invalid args do not modify state', async t => {
       t.throwsAsync(
         // @ts-ignore bad args on purpose for test
         E(vaultFactory).addVaultType(aethIssuer, kw, null),
+        // When we fail again, the reason is the same.
         { message: reason1.message },
       ),
     );
+
+  // The keyword in the vault manager is not "stuck"; it's still available:
+  const rates = harden({
+    liquidationMargin: makeRatio(105n, aethBrand),
+    // charge 5% interest
+    interestRate: makeRatio(5n, aethBrand),
+    loanFee: makeRatio(500n, aethBrand, BASIS_POINTS),
+  });
+  const actual = await E(vaultFactory).addVaultType(aethIssuer, kw, rates);
+  t.true(matches(actual, M.remotable()));
 });

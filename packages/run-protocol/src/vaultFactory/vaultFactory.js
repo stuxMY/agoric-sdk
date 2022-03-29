@@ -135,7 +135,7 @@ export const start = async (zcf, privateArgs) => {
       denominator: amountPattern,
     };
     fit(
-      [collateralIssuer, collateralKeyword, rates],
+      harden([collateralIssuer, collateralKeyword, rates]),
       harden([
         M.remotable(),
         M.string(),
