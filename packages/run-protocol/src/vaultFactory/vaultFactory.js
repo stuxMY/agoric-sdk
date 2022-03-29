@@ -36,6 +36,7 @@ import { makeVaultManager } from './vaultManager.js';
 import { makeLiquidationStrategy } from './liquidateMinimum.js';
 import { makeMakeCollectFeesInvitation } from '../collectFees.js';
 import { makeVaultParamManager, makeElectorateParamManager } from './params.js';
+import { ratioPattern } from '../contractSupport.js';
 
 const { details: X } = assert;
 
@@ -129,11 +130,6 @@ export const start = async (zcf, privateArgs) => {
 
   /** @type {AddVaultType} */
   const addVaultType = async (collateralIssuer, collateralKeyword, rates) => {
-    const amountPattern = { brand: M.remotable(), value: M.any() };
-    const ratioPattern = {
-      numerator: amountPattern,
-      denominator: amountPattern,
-    };
     fit(
       harden([collateralIssuer, collateralKeyword, rates]),
       harden([
