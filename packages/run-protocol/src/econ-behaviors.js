@@ -7,6 +7,7 @@ import '@agoric/governance/exported.js';
 import '@agoric/vats/exported.js';
 import '@agoric/vats/src/core/types.js';
 
+import { AmountMath } from '@agoric/ertp';
 import { makeGovernedTerms } from './vaultFactory/params.js';
 import { makeAmmTerms } from './vpool-xyk-amm/params.js';
 import { makeReserveTerms } from './reserve/params.js';
@@ -250,8 +251,13 @@ export const startVaultFactory = async (
 
   const centralBrand = await centralBrandP;
 
+  // ??? why are there values here?
   // declare governed params for the vaultFactory; addVaultType() sets actual rates
+  /**
+   * @type {VaultManagerParamValues}
+   */
   const rates = {
+    debtLimit: AmountMath.make(centralBrand, 1_000_000n),
     liquidationMargin: makeRatio(105n, centralBrand),
     interestRate: makeRatio(250n, centralBrand, BASIS_POINTS),
     loanFee: makeRatio(200n, centralBrand, BASIS_POINTS),
