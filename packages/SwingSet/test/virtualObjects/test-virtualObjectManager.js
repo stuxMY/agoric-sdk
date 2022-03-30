@@ -385,7 +385,6 @@ test('virtual object cycles using the finish function', t => {
 
   const thing = makeFirstThing('foo');
   t.is(thing.getName(), 'foo');
-  debugger;//
   t.is(thing.getOtherThing().getName(), `foo's other thing`);
   t.is(thing.getOtherThing().getFirstThing(), thing);
 });

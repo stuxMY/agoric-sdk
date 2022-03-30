@@ -7,6 +7,14 @@ import { parseVatSlot } from '../lib/parseVatSlots.js';
 
 // import { kdebug } from './kdebug.js';
 
+// Marker associated to flag objects that should be held onto strongly if
+// somebody attempts to use them as keys in a VirtualObjectAwareWeakSet or
+// VirtualObjectAwareWeakMap, despite the fact that keys in such collections are
+// nominally held onto weakly.  This to thwart attempts to observe GC by
+// squirreling away a piece of a VO while the rest of the VO gets GC'd and then
+// later regenerated.
+const unweakable = new WeakSet();
+
 /**
  * Make a simple LRU cache of virtual object inner selves.
  *
@@ -183,11 +191,12 @@ export function makeVirtualObjectManager(
 ) {
   const cache = makeCache(cacheSize, fetch, store);
 
-  // WeakMap from VO states to VO representatives, to prevent anyone who retains
-  // a state object from being able to observe the comings and goings of
-  // representatives.
-  const stateToRepresentative = new WeakMap();
-  const facetToCohort = new WeakMap();
+  // WeakMap tieing VO components together, to prevent anyone who retains one
+  // piece (say, the state object) from being able to observe the comings and
+  // goings of representatives by hanging onto that piece while the other pieces
+  // are GC'd, then comparing it to what gets generated when the VO is
+  // reconstructed by a later import.
+  const linkToCohort = new WeakMap();
 
   /**
    * Fetch an object's state from secondary storage.
@@ -214,6 +223,31 @@ export function makeVirtualObjectManager(
    */
   function store(baseRef, rawState) {
     syscall.vatstoreSet(`vom.${baseRef}`, JSON.stringify(rawState));
+  }
+
+  // This is a WeakMap from VO aware weak collections to strong Sets that retain
+  // keys used in the associated collection that should not actually be held
+  // weakly.
+  const unweakableKeySets = new WeakMap();
+
+  function preserveUnweakableKey(collection, key) {
+    if (unweakable.has(key)) {
+      let uwkeys = unweakableKeySets.get(collection);
+      if (!uwkeys) {
+        uwkeys = new Set();
+        unweakableKeySets.set(collection, uwkeys);
+      }
+      uwkeys.add(key);
+    }
+  }
+
+  function releaseUnweakableKey(collection, key) {
+    if (unweakable.has(key)) {
+      const uwkeys = unweakableKeySets.get(collection);
+      if (uwkeys) {
+        uwkeys.delete(key);
+      }
+    }
   }
 
   /* eslint max-classes-per-file: ["error", 2] */
@@ -265,6 +299,7 @@ export function makeVirtualObjectManager(
         }
         vmap.set(vkey, value);
       } else {
+        preserveUnweakableKey(this, key);
         actualWeakMaps.get(this).set(key, value);
       }
       return this;
@@ -281,6 +316,7 @@ export function makeVirtualObjectManager(
           return false;
         }
       } else {
+        releaseUnweakableKey(this, key);
         return actualWeakMaps.get(this).delete(key);
       }
     }
@@ -332,6 +368,7 @@ export function makeVirtualObjectManager(
           vset.add(vkey);
         }
       } else {
+        preserveUnweakableKey(this, value);
         actualWeakSets.get(this).add(value);
       }
       return this;
@@ -348,6 +385,7 @@ export function makeVirtualObjectManager(
           return false;
         }
       } else {
+        releaseUnweakableKey(this, value);
         return actualWeakSets.get(this).delete(value);
       }
     }
@@ -424,7 +462,10 @@ export function makeVirtualObjectManager(
     const obj = {};
     for (const [name, func] of Object.entries(behaviorTemplate)) {
       assert.typeof(func, 'function');
-      obj[name] = (...args) => Reflect.apply(func, null, [context, ...args]);
+      const method = (...args) => Reflect.apply(func, null, [context, ...args]);
+      unweakable.add(method);
+      unweakable.add(context);
+      obj[name] = method;
     }
     return obj;
   }
@@ -550,6 +591,7 @@ export function makeVirtualObjectManager(
     harden(behaviorTemplate);
 
     function actualize(state) {
+      unweakable.add(state);
       if (facetNames === null) {
         const context = { state };
         context.self = bindMethods(context, behaviorTemplate);
@@ -559,6 +601,7 @@ export function makeVirtualObjectManager(
         for (const name of facetNames) {
           context.facets[name] = bindMethods(context, behaviorTemplate[name]);
         }
+        unweakable.add(context.facets);
         return context.facets;
       }
     }
@@ -616,20 +659,28 @@ export function makeVirtualObjectManager(
       let toExpose;
       if (facetNames === null) {
         toHold = Far(tag, self);
+        // eslint-disable-next-line no-proto
+        linkToCohort.set(toHold.__proto__, toHold);
+        // eslint-disable-next-line no-proto
+        unweakable.add(toHold.__proto__);
         toExpose = toHold;
       } else {
         toExpose = {};
         toHold = [];
         for (const facetName of facetNames) {
           const facet = Far(`${tag} ${facetName}`, self[facetName]);
+          // eslint-disable-next-line no-proto
+          linkToCohort.set(facet.__proto__, facet);
+          // eslint-disable-next-line no-proto
+          unweakable.add(facet.__proto__);
           toExpose[facetName] = facet;
           toHold.push(facet);
-          facetToCohort.set(facet, toHold);
+          linkToCohort.set(facet, toHold);
         }
         harden(toExpose);
       }
       innerSelf.representative = toHold;
-      stateToRepresentative.set(wrappedState, toHold);
+      linkToCohort.set(wrappedState, toHold);
       return [toHold, toExpose, wrappedState];
     }
 
@@ -698,6 +749,12 @@ export function makeVirtualObjectManager(
     assert(raw, X`unknown kind ID ${kindID}`);
     const durableKindDescriptor = harden(JSON.parse(raw));
     const kindHandle = Far('kind', {});
+    // @ts-expect-error it would be great if TypeScript knew JavaScript
+    // eslint-disable-next-line no-proto
+    linkToCohort.set(kindHandle.__proto__, kindHandle);
+    // @ts-expect-error
+    // eslint-disable-next-line no-proto
+    unweakable.add(kindHandle.__proto__);
     kindDescriptors.set(kindHandle, durableKindDescriptor);
     return kindHandle;
   }
@@ -712,6 +769,12 @@ export function makeVirtualObjectManager(
     const kindIDvref = `o+${kindIDID}/${kindID}`;
     const durableKindDescriptor = harden({ kindID, tag });
     const kindHandle = Far('kind', {});
+    // @ts-expect-error
+    // eslint-disable-next-line no-proto
+    linkToCohort.set(kindHandle.__proto__, kindHandle);
+    // @ts-expect-error
+    // eslint-disable-next-line no-proto
+    unweakable.add(kindHandle.__proto__);
     kindDescriptors.set(kindHandle, durableKindDescriptor);
     registerValue(kindIDvref, kindHandle, false);
     syscall.vatstoreSet(
