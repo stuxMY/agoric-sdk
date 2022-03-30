@@ -7,6 +7,8 @@ import '@agoric/governance/exported.js';
 import '@agoric/vats/exported.js';
 import '@agoric/vats/src/core/types.js';
 
+import { AmountMath } from '@agoric/ertp';
+import { CONTRACT_ELECTORATE, ParamTypes } from '@agoric/governance';
 import { makeGovernedTerms } from './vaultFactory/params.js';
 import { makeAmmTerms } from './vpool-xyk-amm/params.js';
 import { makeReserveTerms } from './reserve/params.js';
@@ -649,3 +651,110 @@ export const startRunStake = async (
   ]);
 };
 harden(startRunStake);
+
+/**
+ * @param {EconomyBootstrapPowers & WellKnownSpaces} powers
+ * @param {Object} config
+ * @param {bigint} config.WantStableFeeBP
+ * @param {bigint} config.GiveStableFeeBP
+ * @param {bigint} config.MINT_LIMIT
+ */
+export const startPSM = async (
+  {
+    consume: {
+      zoe,
+      feeMintAccess: feeMintAccessP,
+      psmBundle,
+      economicCommitteeCreatorFacet,
+      chainTimerService,
+    },
+    produce: { psmCreatorFacet, psmGovernorCreatorFacet },
+    installation: {
+      consume: { contractGovernor },
+      produce: { psm: psmInstallR },
+    },
+    instance: {
+      consume: { economicCommittee },
+      produce: { psm: psmInstanceR },
+    },
+    brand: {
+      consume: { AUSD: anchorBrandP, RUN: runBrandP },
+    },
+    issuer: {
+      consume: { AUSD: anchorIssuerP },
+    },
+  },
+  {
+    WantStableFeeBP = 1n,
+    GiveStableFeeBP = 3n,
+    MINT_LIMIT = 20_000_000n * 1_000_000n,
+  },
+) => {
+  const bundle = await psmBundle;
+  const [
+    feeMintAccess,
+    runBrand,
+    anchorBrand,
+    anchorIssuer,
+    governor,
+    psmInstall,
+    timer,
+  ] = await Promise.all([
+    feeMintAccessP,
+    runBrandP,
+    anchorBrandP,
+    anchorIssuerP,
+    contractGovernor,
+    E(zoe).install(bundle),
+    chainTimerService,
+  ]);
+
+  const poserInvitationP = E(
+    economicCommitteeCreatorFacet,
+  ).getPoserInvitation();
+  const [initialPoserInvitation, electorateInvitationAmount] =
+    await Promise.all([
+      poserInvitationP,
+      E(E(zoe).getInvitationIssuer()).getAmountOf(poserInvitationP),
+    ]);
+
+  const mintLimit = AmountMath.make(anchorBrand, MINT_LIMIT);
+  const terms = {
+    anchorBrand,
+    anchorPerStable: makeRatio(100n, anchorBrand, 100n, runBrand),
+    governedParams: {
+      WantStableFeeBP: { type: ParamTypes.NAT, value: WantStableFeeBP },
+      GiveStableFeeBP: { type: ParamTypes.NAT, value: GiveStableFeeBP },
+      MintLimit: { type: ParamTypes.AMOUNT, value: mintLimit },
+    },
+    [CONTRACT_ELECTORATE]: {
+      type: ParamTypes.INVITATION,
+      value: electorateInvitationAmount,
+    },
+  };
+
+  const governorFacets = await E(zoe).startInstance(
+    governor,
+    {},
+    {
+      timer,
+      economicCommittee,
+      governedContractInstallation: psmInstall,
+      governed: harden({
+        terms,
+        issuerKeywordRecord: { AUSD: anchorIssuer },
+        privateArgs: { feeMintAccess, initialPoserInvitation },
+      }),
+    },
+    harden({ economicCommitteeCreatorFacet }),
+  );
+
+  const governedInstance = await E(governorFacets.creatorFacet).getInstance();
+  const creatorFacet = E(governorFacets.creatorFacet).getCreatorFacet();
+
+  psmInstallR.resolve(psmInstall);
+  psmCreatorFacet.resolve(creatorFacet);
+  psmGovernorCreatorFacet.resolve(governorFacets.creatorFacet);
+  psmInstanceR.resolve(governedInstance);
+};
+harden(startPSM);
