@@ -40,7 +40,7 @@
     "@agoric/vat-data": "^0.1.0",
     "@agoric/vats": "^0.7.0",
     "@agoric/zoe": "^0.21.3",
-    "@endo/bundle-source": "^2.1.1",
+    "@endo/bundle-source": "^4.0.0",
     "@endo/captp": "^2.0.3",
     "@endo/far": "^0.1.9",
     "@endo/marshal": "^0.6.3",
